@@ -1,0 +1,38 @@
+.video-player {
+  margin-top: 16px;
+}
+
+.video-element {
+  width: 100%;
+  border-radius: 8px;
+  background: #000;
+  max-height: 400px;
+}
+
+.video-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 12px;
+}
+
+.download-btn {
+  flex: 1;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.download-btn:active {
+  transform: translateY(0);
+}

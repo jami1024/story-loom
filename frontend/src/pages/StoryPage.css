@@ -1,0 +1,27 @@
+.story-page {
+  padding: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.story-page-header {
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+.story-page-body {
+  display: flex;
+  gap: 24px;
+  flex: 1;
+  min-height: 0;
+}
+
+.story-main-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}

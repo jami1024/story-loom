@@ -1,0 +1,92 @@
+services:
+  # MySQL - 数据持久化
+  mysql:
+    image: docker.1ms.run/library/mysql:8.0
+    container_name: storyloom-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=storyloom
+      - MYSQL_USER=storyloom
+      - MYSQL_PASSWORD=storyloom_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Redis - 用于 Celery 消息队列（可选）
+  redis:
+    image: docker.1ms.run/library/redis:7-alpine
+    container_name: storyloom-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # 后端 API 服务
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    container_name: storyloom-backend
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=mysql+aiomysql://storyloom:storyloom_password@mysql:3306/storyloom?charset=utf8mb4
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ZHIPU_AUTH_TOKEN=${ZHIPU_AUTH_TOKEN}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+
+  # Celery Worker - 处理异步视频生成任务（暂时禁用）
+  # celery-worker:
+  #   build:
+  #     context: .
+  #     dockerfile: ./backend/Dockerfile
+  #   container_name: storyloom-celery-worker
+  #   command: celery -A app.tasks worker --loglevel=info
+  #   environment:
+  #     - REDIS_URL=redis://redis:6379/0
+  #     - CELERY_BROKER_URL=redis://redis:6379/0
+  #     - CELERY_RESULT_BACKEND=redis://redis:6379/0
+  #   depends_on:
+  #     - redis
+  #     - backend
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./backend:/app
+  #     - ./browser_state.json:/app/browser_state.json:ro
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: storyloom-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:

@@ -1,0 +1,183 @@
+# FastAPI Docker Compose 配置
+# 支持开发、测试、生产多环境部署
+
+version: '3.8'
+
+services:
+  # FastAPI 应用
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # 配置国内 pip 源（可选）
+        # 清华源（推荐）
+        PIP_INDEX_URL: https://pypi.tuna.tsinghua.edu.cn/simple
+        PIP_TRUSTED_HOST: pypi.tuna.tsinghua.edu.cn
+        # 阿里云源
+        # PIP_INDEX_URL: https://mirrors.aliyun.com/pypi/simple/
+        # PIP_TRUSTED_HOST: mirrors.aliyun.com
+
+        # 配置端口（默认 8000）
+        PORT: ${APP_PORT:-8000}
+
+    image: ${IMAGE_NAME:-myapp}:${IMAGE_TAG:-latest}
+    container_name: ${CONTAINER_NAME:-myapp}
+
+    # 端口映射（宿主机端口:容器端口）
+    # 测试环境示例：8080:8000
+    # 生产环境示例：80:8000 或 443:8000
+    ports:
+      - "${HOST_PORT:-8000}:${APP_PORT:-8000}"
+
+    # 环境变量配置
+    environment:
+      # 应用端口
+      - PORT=${APP_PORT:-8000}
+
+      # 运行环境（development/testing/production）
+      - ENV=${ENV:-development}
+
+      # Workers 数量（生产环境建议：CPU 核心数 * 2 + 1）
+      - WORKERS=${WORKERS:-1}
+
+      # 数据库配置
+      - DATABASE_URL=${DATABASE_URL:-postgresql://user:pass@db:5432/myapp}
+
+      # Redis 配置
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+
+      # JWT 密钥
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+
+      # 日志级别
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+
+      # CORS 允许的源
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
+
+    # 挂载卷（开发环境可以挂载代码实现热重载）
+    volumes:
+      # 生产环境请注释掉代码挂载
+      # - .:/app
+
+      # 日志持久化
+      - ./logs:/app/logs
+
+      # 上传文件持久化
+      - ./uploads:/app/uploads
+
+    # 依赖服务
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+    # 重启策略
+    restart: unless-stopped
+
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${APP_PORT:-8000}/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+    # 网络
+    networks:
+      - app-network
+
+  # PostgreSQL 数据库
+  db:
+    image: postgres:15-alpine
+    container_name: ${DB_CONTAINER_NAME:-myapp-db}
+
+    environment:
+      - POSTGRES_USER=${DB_USER:-myapp}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-myapp_password}
+      - POSTGRES_DB=${DB_NAME:-myapp}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+
+    volumes:
+      # 数据持久化
+      - postgres_data:/var/lib/postgresql/data
+
+      # 初始化脚本（可选）
+      # - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+
+    ports:
+      - "${DB_PORT:-5432}:5432"
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-myapp}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - app-network
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: ${REDIS_CONTAINER_NAME:-myapp-redis}
+
+    command: redis-server --appendonly yes
+
+    volumes:
+      - redis_data:/data
+
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+    networks:
+      - app-network
+
+# 数据卷
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# 网络
+networks:
+  app-network:
+    driver: bridge
+
+# 使用说明：
+#
+# 1. 开发环境启动：
+#    cp .env.example .env.dev
+#    docker-compose --env-file .env.dev up -d
+#
+# 2. 测试环境启动：
+#    cp .env.example .env.test
+#    # 修改 .env.test 中的端口和配置
+#    docker-compose --env-file .env.test up -d
+#
+# 3. 生产环境启动：
+#    cp .env.example .env.prod
+#    # 修改 .env.prod 中的敏感配置
+#    docker-compose --env-file .env.prod up -d
+#
+# 4. 查看日志：
+#    docker-compose logs -f app
+#
+# 5. 停止服务：
+#    docker-compose down
+#
+# 6. 停止并删除数据卷：
+#    docker-compose down -v

@@ -1,0 +1,81 @@
+# ── 环境变量 & 密钥（绝对不能提交） ──
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ── AI 助手 / IDE 工作目录 ──
+.gemini/
+.claude/*
+!.claude/skills/
+.agent/
+# .agents/ 保留（含 skills 实际文件，.claude/skills/ 是符号链接指向此处）
+.codebuddy/
+.commandcode/
+.continue/
+.crush/
+.factory/
+.goose/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.roo/
+.trae/
+.windsurf/
+.zencoder/
+.gemini-clipboard/
+
+# ── 参考项目（第三方代码，不纳入版本管理） ──
+references/
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+venv/
+.venv/
+
+# ── Node.js ──
+node_modules/
+
+# ── 系统文件 ──
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ── IDE ──
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ── 测试相关 ──
+test_*
+tests/
+
+# ── Docker ──
+*.log
+
+# ── 静态生成图片（运行时产物） ──
+static/images/
+
+# ── 技能锁文件 ──
+/skills/
+/skills-lock.json

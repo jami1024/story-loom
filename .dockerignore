@@ -1,0 +1,34 @@
+.git
+.gitignore
+*.md
+!CLAUDE.md
+.vscode
+.idea
+.env
+.env.local
+node_modules
+__pycache__
+*.pyc
+venv
+ENV
+
+# 测试文件
+test_*.py
+*_test.py
+quick_test.py
+
+# 临时脚本
+crack_*.py
+analyze_*.py
+demo_*.py
+example_*.py
+find_*.py
+
+# 临时数据
+temp_data/
+uploads/
+videos/
+browser_state.json
+
+# Shell 脚本
+*.sh

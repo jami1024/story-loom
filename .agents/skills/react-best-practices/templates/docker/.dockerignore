@@ -1,0 +1,119 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 构建输出
+dist/
+build/
+.next/
+out/
+
+# 开发工具
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 测试
+coverage/
+.nyc_output/
+*.lcov
+.jest/
+
+# 环境变量
+.env
+.env.*
+!.env.example
+
+# 日志
+logs/
+*.log
+
+# Docker
+.dockerignore
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# 文档
+docs/
+*.md
+!README.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# 临时文件
+tmp/
+temp/
+*.tmp
+
+# 上传和媒体
+uploads/
+media/
+
+# 缓存
+.cache/
+.parcel-cache/
+.turbo/
+.vite/
+.swc/
+
+# Storybook
+.storybook/
+storybook-static/
+
+# TypeScript
+*.tsbuildinfo
+
+# ESLint
+.eslintcache
+
+# Prettier
+.prettierignore
+
+# Yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Editor directories
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
