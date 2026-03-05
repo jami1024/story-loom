@@ -1,9 +1,10 @@
 """
 故事解析 API 路由
 """
+import asyncio
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -12,9 +13,12 @@ from app.constants.emotions import EMOTION_INTENSITIES, EMOTION_TAGS, EMOTION_TR
 from app.core.config import get_settings
 from app.database import get_db
 from app.models.story import (
+    ParseTaskStatus,
     ProjectStatus,
     ShotCharacterEmotion,
     StoryCharacter,
+    StoryParseTask,
+    StoryProject,
     StoryScene,
     StoryShot,
 )
@@ -23,15 +27,17 @@ from app.schemas.story import (
     EmotionPresetResponse,
     EmotionUpdateRequest,
     ImageGenerateRequest,
-    ParseStatusResponse,
+    ParseTaskResponse,
+    ParseTaskStatusResponse,
     ProjectCreateRequest,
+    ProjectUpdateRequest,
     SceneUpdateRequest,
     ShotUpdateRequest,
 )
 from app.services.image_client import get_image_client
 from app.services.llm_client import get_llm_client
 from app.services.scene_calibrator import calibrate_all_scenes, calibrate_scene_visual_prompt
-from app.services.story_parser import parse_story
+from app.services.story_parser import _acquire_parse_slot, run_parse_in_background
 from app.services.story_service import StoryService
 from app.services.task_service import TaskService
 from app.services.video_prompt_builder import build_all_prompts
@@ -102,50 +108,124 @@ async def delete_project(project_id: int, db: AsyncSession = Depends(get_db)):
     return {"message": "项目已删除"}
 
 
+@router.put("/projects/{project_id}", summary="更新项目配置")
+async def update_project(
+    project_id: int,
+    req: ProjectUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """更新项目的通道配置等字段"""
+    result = await db.execute(
+        select(StoryProject).where(StoryProject.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+
+    update_data = req.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(project, key, value)
+
+    await db.commit()
+    await db.refresh(project)
+    return project.to_dict()
+
+
 # ========== 解析 ==========
 
-@router.post("/projects/{project_id}/parse", summary="触发故事解析")
+@router.post("/projects/{project_id}/parse", summary="触发故事解析（异步）")
 async def trigger_parse(project_id: int, db: AsyncSession = Depends(get_db)):
-    """触发 LLM 解析故事文本"""
+    """提交异步解析任务，立即返回任务 ID"""
     project = await StoryService.get_project(db, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
 
-    if project.status not in (ProjectStatus.DRAFT, ProjectStatus.FAILED):
+    if project.status not in (ProjectStatus.DRAFT, ProjectStatus.FAILED, ProjectStatus.PARSED):
         raise HTTPException(status_code=400, detail=f"当前状态 '{project.status.value}' 不可解析")
 
-    try:
-        llm_client = get_llm_client()
-        stats = await parse_story(db, project, llm_client)
-        return {
-            "status": "parsed",
-            "message": "解析完成",
-            **stats,
-        }
-    except Exception as e:
-        logger.error(f"解析失败: {e}")
-        raise HTTPException(status_code=500, detail=f"解析失败: {e}")
+    # 检查是否已有进行中的解析任务
+    existing_stmt = (
+        select(StoryParseTask)
+        .where(
+            StoryParseTask.project_id == project_id,
+            StoryParseTask.status.in_([
+                ParseTaskStatus.PENDING.value,
+                ParseTaskStatus.PROCESSING.value,
+            ]),
+        )
+    )
+    existing_result = await db.execute(existing_stmt)
+    if existing_result.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="该项目已有进行中的解析任务")
+
+    # 尝试获取并发槽位
+    acquired = await _acquire_parse_slot()
+    if not acquired:
+        raise HTTPException(status_code=429, detail="解析并发数已达上限，请稍后重试")
+
+    # 创建解析任务记录
+    parse_task = StoryParseTask(
+        project_id=project_id,
+        status=ParseTaskStatus.PENDING.value,
+        progress=0.0,
+        message="任务已提交，等待执行",
+    )
+    db.add(parse_task)
+    await db.commit()
+    await db.refresh(parse_task)
+
+    # 启动后台 asyncio 任务
+    asyncio.create_task(run_parse_in_background(project_id, parse_task.id))
+
+    return ParseTaskResponse(
+        task_id=parse_task.id,
+        project_id=project_id,
+        status=parse_task.status,
+        message="解析任务已提交",
+    )
 
 
-@router.get("/projects/{project_id}/parse/status", summary="解析状态")
-async def get_parse_status(project_id: int, db: AsyncSession = Depends(get_db)):
-    """查询解析状态和进度"""
+@router.get("/projects/{project_id}/parse/status", summary="解析任务状态")
+async def get_parse_status(
+    project_id: int,
+    task_id: int | None = Query(None, description="指定任务 ID，不传则查最新"),
+    db: AsyncSession = Depends(get_db),
+):
+    """查询解析任务状态和进度"""
     project = await StoryService.get_project(db, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
 
-    messages = {
-        ProjectStatus.DRAFT: "等待解析",
-        ProjectStatus.PARSING: "正在解析中...",
-        ProjectStatus.PARSED: "解析完成",
-        ProjectStatus.READY: "Prompt 已就绪",
-        ProjectStatus.GENERATING: "正在生成视频",
-        ProjectStatus.COMPLETED: "全部完成",
-        ProjectStatus.FAILED: "解析失败",
-    }
-    return ParseStatusResponse(
-        status=project.status.value,
-        message=messages.get(project.status, "未知状态"),
+    if task_id:
+        stmt = select(StoryParseTask).where(
+            StoryParseTask.id == task_id,
+            StoryParseTask.project_id == project_id,
+        )
+    else:
+        stmt = (
+            select(StoryParseTask)
+            .where(StoryParseTask.project_id == project_id)
+            .order_by(StoryParseTask.id.desc())
+            .limit(1)
+        )
+
+    result = await db.execute(stmt)
+    task = result.scalar_one_or_none()
+    if not task:
+        raise HTTPException(status_code=404, detail="未找到解析任务")
+
+    return ParseTaskStatusResponse(
+        task_id=task.id,
+        project_id=task.project_id,
+        status=task.status,
+        progress=task.progress,
+        message=task.message,
+        error_detail=task.error_detail,
+        result_metadata=task.result_metadata,
+        created_at=task.created_at,
+        started_at=task.started_at,
+        completed_at=task.completed_at,
+        updated_at=task.updated_at,
     )
 
 
@@ -263,7 +343,7 @@ async def generate_video_for_shot(shot_id: int, db: AsyncSession = Depends(get_d
     ratio_width, ratio_height = ratio_map.get(ratio, (16, 9))
     duration = project.default_duration if project else 1
 
-    # 收集参考图（场景 + 角色）
+    # 收集参考图（场景 + 角色），按重要性排序
     reference_images = []
 
     # 1. 场景参考图
@@ -273,16 +353,19 @@ async def generate_video_for_shot(shot_id: int, db: AsyncSession = Depends(get_d
             "role": "reference_image",
         })
 
-    # 2. 角色参考图（从分镜关联的角色中收集）
+    # 2. 角色参考图 — 按角色重要性排序（主角 > 配角 > 次要）
+    role_priority = {"protagonist": 0, "supporting": 1, "minor": 2}
+    char_refs = []
     for emo in (shot.character_emotions or []):
         if emo.character and emo.character.image_url:
-            reference_images.append({
+            char_refs.append({
                 "url": emo.character.image_url,
                 "role": "reference_image",
+                "_priority": role_priority.get(emo.character.role, 3),
             })
-
-    # 最多传 4 张参考图（API 限制）
-    reference_images = reference_images[:4]
+    char_refs.sort(key=lambda x: x["_priority"])
+    for ref in char_refs:
+        reference_images.append({"url": ref["url"], "role": ref["role"]})
 
     try:
         async with ZhipuVideoService(auth_token) as service:

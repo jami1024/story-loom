@@ -56,7 +56,7 @@ async def generate_prompt(
     service: PromptService = Depends(get_prompt_service),
 ):
     """
-    使用 DeepSeek 生成优化后的视频描述 Prompt
+    使用多模型服务生成优化后的视频描述 Prompt
 
     支持两种输入模式：
     1. **简单文本模式**: 提供 user_input 字段

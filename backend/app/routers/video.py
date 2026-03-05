@@ -61,7 +61,7 @@ async def generate_video(request: VideoGenerateRequest, db: AsyncSession = Depen
         }
         ratio_width, ratio_height = ratio_map.get(request.ratio.value, (16, 9))
 
-        logger.info(f"调用智谱AI API - 时长: {request.duration.value}, 比例: {request.ratio.value}, 条数: {request.count}")
+        logger.info(f"调用视频生成 API - 时长: {request.duration.value}, 比例: {request.ratio.value}, 条数: {request.count}")
 
         tasks = []
         success_count = 0

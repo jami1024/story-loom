@@ -1,38 +1,42 @@
 .video-player {
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
 .video-element {
   width: 100%;
-  border-radius: 8px;
-  background: #000;
   max-height: 400px;
+  background: #0F172A;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
 }
 
 .video-actions {
-  margin-top: 12px;
+  margin-top: 10px;
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .download-btn {
   flex: 1;
   padding: 10px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--color-primary);
+  color: #FFFFFF;
   border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
 }
 
 .download-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: var(--color-primary-hover);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+  transform: translateY(-1px);
 }
 
 .download-btn:active {
   transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(99, 102, 241, 0.2);
 }

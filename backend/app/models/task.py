@@ -24,7 +24,7 @@ class VideoTask(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
 
     # 任务信息
-    chat_id = Column(String(64), unique=True, index=True, nullable=False, comment="智谱API任务ID")
+    chat_id = Column(String(64), unique=True, index=True, nullable=False, comment="视频平台任务ID")
     prompt = Column(Text, nullable=False, comment="视频描述")
 
     # 状态信息

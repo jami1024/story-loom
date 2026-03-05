@@ -105,8 +105,8 @@ class VideoStatusResponse(BaseModel):
             "status": "finished",
             "msg": "已完成",
             "plan": "100%",
-            "video_url": "https://sfile.chatglm.cn/api/cogvideo/xxx.mp4",
-            "cover_url": "https://sfile.chatglm.cn/api/cogvideo/xxx_cover.jpeg",
+            "video_url": "https://cdn.example.com/videos/xxx.mp4",
+            "cover_url": "https://cdn.example.com/videos/xxx_cover.jpeg",
             "video_resolution": "3840*2160",
             "video_duration": "5s",
             "video_fps": "30帧"

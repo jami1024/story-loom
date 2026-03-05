@@ -264,9 +264,15 @@ class StoryService:
         await db.commit()
 
         try:
-            # 获取 provider 和 model 配置
-            provider = project.image_provider or "zhipu-image" if project else "zhipu-image"
+            # 获取 provider 和 model 配置（若项目指定的 provider 不可用则回退到首个可用通道）
+            requested = project.image_provider if project else None
+            if requested and requested in image_client.available_providers:
+                provider = requested
+            else:
+                provider = image_client.get_default_provider()
             model = project.image_model if project else None
+            if not provider:
+                raise AppException("无可用的图片生成通道，请在设置中配置", status_code=400)
 
             # 调用图片生成
             image_url = await image_client.generate_image(
@@ -374,9 +380,15 @@ class StoryService:
         await db.commit()
 
         try:
-            # 获取 provider 和 model 配置
-            provider = project.image_provider or "zhipu-image" if project else "zhipu-image"
+            # 获取 provider 和 model 配置（若项目指定的 provider 不可用则回退到首个可用通道）
+            requested = project.image_provider if project else None
+            if requested and requested in image_client.available_providers:
+                provider = requested
+            else:
+                provider = image_client.get_default_provider()
             model = project.image_model if project else None
+            if not provider:
+                raise AppException("无可用的图片生成通道，请在设置中配置", status_code=400)
 
             # 调用图片生成（宽景 16:9）
             image_url = await image_client.generate_image(

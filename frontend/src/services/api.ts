@@ -8,6 +8,47 @@ import type {
   EmotionPresets,
 } from '../types/story'
 
+export type ProviderType = 'llm' | 'image' | 'video'
+
+export interface AIProvider {
+  id: number
+  name: string
+  display_name: string | null
+  provider_type: ProviderType
+  base_url: string
+  api_key: string
+  default_model: string
+  is_active: boolean
+  sort_order: number
+  relay_type: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ProviderCreatePayload {
+  name: string
+  display_name?: string
+  provider_type: ProviderType
+  base_url: string
+  api_key: string
+  default_model: string
+  is_active?: boolean
+  sort_order?: number
+  relay_type?: string
+}
+
+export interface ProviderUpdatePayload {
+  name?: string
+  display_name?: string
+  provider_type?: ProviderType
+  base_url?: string
+  api_key?: string
+  default_model?: string
+  is_active?: boolean
+  sort_order?: number
+  relay_type?: string
+}
+
 const API_BASE = import.meta.env.VITE_API_URL !== undefined
   ? import.meta.env.VITE_API_URL
   : 'http://localhost:8001'
@@ -34,6 +75,7 @@ export async function createProject(data: {
   default_ratio?: string
   default_duration?: number
   llm_provider?: string
+  image_provider?: string
 }) {
   return request<StoryProject>('/api/story/projects', {
     method: 'POST',
@@ -57,22 +99,52 @@ export async function deleteProject(id: number) {
   })
 }
 
-// ========== 解析 ==========
-
-export async function parseProject(id: number) {
-  return request<{
-    status: string
-    message: string
-    character_count: number
-    scene_count: number
-    shot_count: number
-    emotion_count: number
-  }>(`/api/story/projects/${id}/parse`, { method: 'POST' })
+export async function updateProject(id: number, data: {
+  title?: string
+  genre?: string
+  style?: string
+  llm_provider?: string
+  image_provider?: string
+  image_model?: string
+  video_provider?: string
+}) {
+  return request<StoryProject>(`/api/story/projects/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
 }
 
-export async function getParseStatus(id: number) {
-  return request<{ status: string; progress?: number; message?: string }>(
-    `/api/story/projects/${id}/parse/status`
+// ========== 解析 ==========
+
+export interface ParseTaskSubmitResponse {
+  task_id: number
+  project_id: number
+  status: string
+  message: string | null
+}
+
+export interface ParseTaskStatusResponse {
+  task_id: number
+  project_id: number
+  status: string
+  progress: number
+  message: string | null
+  error_detail: string | null
+  result_metadata: Record<string, unknown> | null
+  created_at: string | null
+  started_at: string | null
+  completed_at: string | null
+  updated_at: string | null
+}
+
+export async function parseProject(id: number) {
+  return request<ParseTaskSubmitResponse>(`/api/story/projects/${id}/parse`, { method: 'POST' })
+}
+
+export async function getParseStatus(id: number, taskId?: number) {
+  const query = taskId ? `?task_id=${taskId}` : ''
+  return request<ParseTaskStatusResponse>(
+    `/api/story/projects/${id}/parse/status${query}`
   )
 }
 
@@ -181,6 +253,37 @@ export async function calibrateScenes(projectId: number) {
 
 export async function calibrateScene(sceneId: number) {
   return request<StoryScene>(`/api/story/scenes/${sceneId}/calibrate`, {
+    method: 'POST',
+  })
+}
+
+export async function listProviders(type?: ProviderType) {
+  const query = type ? `?type=${type}` : ''
+  return request<{ total: number; providers: AIProvider[] }>(`/api/providers${query}`)
+}
+
+export async function createProvider(payload: ProviderCreatePayload) {
+  return request<AIProvider>('/api/providers', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function updateProvider(providerId: number, payload: ProviderUpdatePayload) {
+  return request<AIProvider>(`/api/providers/${providerId}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function deleteProvider(providerId: number) {
+  return request<{ message: string }>(`/api/providers/${providerId}`, {
+    method: 'DELETE',
+  })
+}
+
+export async function reloadProviderClients() {
+  return request<{ message: string; llm_providers: number; image_providers: number }>('/api/providers/reload', {
     method: 'POST',
   })
 }

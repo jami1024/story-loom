@@ -1,6 +1,6 @@
 """
-智谱AI视频生成服务
-使用逆向的签名算法直接调用API
+视频生成服务
+使用签名算法直接调用视频 API
 """
 import aiohttp
 import asyncio
@@ -12,7 +12,7 @@ from app.core.config import get_settings
 
 
 class ZhipuVideoService:
-    """智谱AI视频生成服务"""
+    """视频生成服务"""
 
     BASE_URL = "https://chatglm.cn"
 
@@ -351,7 +351,7 @@ if __name__ == "__main__":
     # 测试代码
     async def test():
         print("=" * 60)
-        print("智谱AI视频服务测试")
+        print("视频服务测试")
         print("=" * 60)
 
         async with ZhipuVideoService() as service:

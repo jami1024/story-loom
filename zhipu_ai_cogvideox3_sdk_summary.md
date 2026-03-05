@@ -1,19 +1,19 @@
-# 智谱 AI CogVideo-X 3 SDK 关键信息总结
+# 视频模型 SDK 关键信息总结
 
-本文档总结了智谱 AI CogVideo-X 3 SDK 的核心使用方法、认证机制、视频生成参数（特别是 4K 分辨率支持）以及异步操作处理方式，以指导后端集成。
+本文档总结了视频模型 SDK 的核心使用方法、认证机制、视频生成参数（特别是 4K 分辨率支持）以及异步操作处理方式，以指导后端集成。
 
 ---
 
 ## 1. API 使用与认证
 
 *   **SDK 名称:** `zai-sdk` (Python SDK)
-*   **客户端初始化:** 通过 `ZhipuAiClient` 进行初始化。
-*   **认证方式:** 在初始化 `ZhipuAiClient` 时，通过传入 `api_key` 进行身份验证。
+*   **客户端初始化:** 通过对应 SDK Client 进行初始化。
+*   **认证方式:** 在初始化客户端时，通过传入 `api_key` 进行身份验证。
 
     ```python
-    from zhipuai import ZhipuAi
+    from provider_sdk import VideoClient
 
-    client = ZhipuAi(api_key="YOUR_API_KEY") # 替换为您的实际 API Key
+    client = VideoClient(api_key="YOUR_API_KEY") # 替换为您的实际 API Key
     ```
 
 *   **视频生成入口:** 使用 `client.videos.generations` 方法发起视频生成请求。

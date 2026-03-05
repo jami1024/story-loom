@@ -21,7 +21,7 @@ class ProviderService:
         {
             "env_key": "DEEPSEEK_API_KEY",
             "name": "deepseek",
-            "display_name": "DeepSeek",
+            "display_name": "LLM 通道 A",
             "provider_type": "llm",
             "base_url": "https://api.deepseek.com",
             "default_model": "deepseek-chat",
@@ -31,7 +31,7 @@ class ProviderService:
         {
             "env_key": "ZHIPU_API_KEY",
             "name": "zhipu",
-            "display_name": "智谱 GLM",
+            "display_name": "LLM 通道 B",
             "provider_type": "llm",
             "base_url": "https://open.bigmodel.cn/api/paas/v4/",
             "default_model": "glm-4-flash",
@@ -41,7 +41,7 @@ class ProviderService:
         {
             "env_key": "ZHIPU_API_KEY",
             "name": "zhipu-image",
-            "display_name": "智谱 CogView",
+            "display_name": "图像通道 A",
             "provider_type": "image",
             "base_url": "https://open.bigmodel.cn/api/paas/v4/",
             "default_model": "cogview-4",
@@ -51,7 +51,7 @@ class ProviderService:
         {
             "env_key": "OPENAI_API_KEY",
             "name": "openai",
-            "display_name": "OpenAI DALL-E",
+            "display_name": "图像通道 B",
             "provider_type": "image",
             "base_url": "https://api.openai.com/v1",
             "default_model": "dall-e-3",
@@ -61,7 +61,7 @@ class ProviderService:
         {
             "env_key": "SILICON_API_KEY",
             "name": "silicon",
-            "display_name": "SiliconFlow",
+            "display_name": "图像通道 C",
             "provider_type": "image",
             "base_url": "https://api.siliconflow.cn/v1",
             "default_model": "black-forest-labs/FLUX.1-schnell",
@@ -71,7 +71,7 @@ class ProviderService:
         {
             "env_key": "GEMINI_API_KEY",
             "name": "gemini",
-            "display_name": "Google Gemini",
+            "display_name": "图像通道 D",
             "provider_type": "image",
             "base_url": "https://co.yes.vg/team/gemini",
             "default_model": "gemini-3.1-flash-image",
@@ -81,7 +81,7 @@ class ProviderService:
         {
             "env_key": "GEMINI_API_KEY",
             "name": "gemini-chat",
-            "display_name": "Gemini (OpenAI Chat)",
+            "display_name": "图像通道 E（Chat 兼容）",
             "provider_type": "image",
             "base_url": "https://aiberm.com/v1",
             "default_model": "gemini-3-pro-image-preview",

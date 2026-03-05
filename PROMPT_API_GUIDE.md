@@ -2,7 +2,7 @@
 
 ## 概述
 
-使用 DeepSeek API 根据用户输入的简单想法,生成专业的 AI 视频描述 Prompt。
+使用可切换 LLM API 根据用户输入的简单想法,生成专业的 AI 视频描述 Prompt。
 
 ## API 端点
 
@@ -157,7 +157,7 @@ curl -X POST http://localhost:8000/api/prompt/generate \
 
 ## Token 使用统计
 
-每次调用 DeepSeek API 会返回 Token 使用统计:
+每次调用 LLM API 会返回 Token 使用统计:
 
 - **prompt_tokens**: 系统提示词 + 用户输入消耗的 Token (约 3100-3200)
 - **completion_tokens**: 生成内容消耗的 Token (约 50-60，已优化)
@@ -168,7 +168,7 @@ curl -X POST http://localhost:8000/api/prompt/generate \
 ## 错误处理
 
 - **500 错误**: 服务配置错误 (如未设置 DEEPSEEK_API_KEY)
-- **500 错误**: DeepSeek API 调用失败 (网络问题或 API 异常)
+- **500 错误**: LLM API 调用失败 (网络问题或 API 异常)
 
 ---
 

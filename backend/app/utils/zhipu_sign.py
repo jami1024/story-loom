@@ -1,7 +1,3 @@
-"""
-智谱AI签名生成器
-根据逆向分析的JavaScript代码实现
-"""
 import hashlib
 import time
 import uuid
@@ -133,7 +129,7 @@ def get_signed_headers(custom_headers: dict = None) -> dict:
 if __name__ == "__main__":
     # 测试签名生成
     print("=" * 60)
-    print("智谱AI签名生成测试")
+    print("签名生成测试")
     print("=" * 60)
 
     # 生成签名

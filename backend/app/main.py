@@ -19,6 +19,7 @@ from app.core.exceptions import (
 )
 from app.core.logging import setup_logging
 from app.database import async_session, init_db
+from app.models.story import ParseTaskStatus, ProjectStatus, StoryParseTask, StoryProject
 from app.routers import prompt, provider, story, video
 from app.services.image_client import close_image_client, init_image_client
 from app.services.llm_client import close_llm_client, init_llm_client
@@ -39,6 +40,31 @@ async def lifespan(app: FastAPI):
         logger.info("数据库初始化完成")
     except Exception as e:
         logger.error(f"数据库初始化失败: {e}")
+
+    # 启动清理：将残留的 pending/processing 解析任务标记为 failed
+    try:
+        async with async_session() as db:
+            from sqlalchemy import select, update
+            # 1. 清理残留的解析任务
+            stale_task_statuses = [ParseTaskStatus.PENDING.value, ParseTaskStatus.PROCESSING.value]
+            await db.execute(
+                update(StoryParseTask)
+                .where(StoryParseTask.status.in_(stale_task_statuses))
+                .values(
+                    status=ParseTaskStatus.FAILED.value,
+                    message="服务重启，任务被终止",
+                )
+            )
+            # 2. 清理 PARSING 状态的项目
+            await db.execute(
+                update(StoryProject)
+                .where(StoryProject.status == ProjectStatus.PARSING)
+                .values(status=ProjectStatus.FAILED)
+            )
+            await db.commit()
+            logger.info("启动清理：残留解析任务已标记为 failed")
+    except Exception as e:
+        logger.error(f"启动清理失败: {e}")
 
     await init_prompt_service()
 
@@ -68,7 +94,7 @@ async def lifespan(app: FastAPI):
 # 创建 FastAPI 应用
 app = FastAPI(
     title="StoryLoom API",
-    description="智谱AI视频生成服务 - 4K视频创作平台",
+    description="多模型视频生成服务 - 4K视频创作平台",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -88,7 +114,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 挂载静态文件目录（Gemini 图片本地存储）
+# 挂载静态文件目录（图片本地存储）
 static_images_dir = Path("static/images")
 static_images_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")

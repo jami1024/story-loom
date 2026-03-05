@@ -9,4 +9,6 @@ from app.models.story import (  # noqa: F401
     StoryScene,
     StoryShot,
     ShotCharacterEmotion,
+    StoryParseTask,
+    ParseTaskStatus,
 )

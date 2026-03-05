@@ -10,23 +10,23 @@ class Settings(BaseSettings):
     # 数据库
     DATABASE_URL: str = "mysql+aiomysql://storyloom:storyloom_password@mysql:3306/storyloom?charset=utf8mb4"
 
-    # 智谱 AI
+    # 视频生成供应商
     ZHIPU_AUTH_TOKEN: str = ""
     ZHIPU_SIGN_SECRET: str = ""
 
-    # DeepSeek (fallback: 首次启动自动写入 DB)
+    # LLM 通道 A (fallback: 首次启动自动写入 DB)
     DEEPSEEK_API_KEY: str = ""
 
-    # 智谱 GLM (fallback: 首次启动自动写入 DB)
+    # LLM 通道 B (fallback: 首次启动自动写入 DB)
     ZHIPU_API_KEY: str = ""
 
-    # OpenAI (fallback: 首次启动自动写入 DB)
+    # 图像通道 B (fallback: 首次启动自动写入 DB)
     OPENAI_API_KEY: str = ""
 
-    # SiliconFlow (fallback: 首次启动自动写入 DB)
+    # 图像通道 C (fallback: 首次启动自动写入 DB)
     SILICON_API_KEY: str = ""
 
-    # Google Gemini (fallback: 首次启动自动写入 DB)
+    # 图像通道 D/E (fallback: 首次启动自动写入 DB)
     GEMINI_API_KEY: str = ""
 
     # CORS

@@ -6,6 +6,7 @@ import logging
 import re
 
 from openai import AsyncOpenAI
+import httpx
 
 from app.core.exceptions import AppException
 
@@ -30,6 +31,8 @@ class LLMClient:
             self._clients[p["name"]] = AsyncOpenAI(
                 api_key=p["api_key"],
                 base_url=p["base_url"],
+                timeout=httpx.Timeout(300.0, connect=30.0),
+                max_retries=5,
             )
             self._models[p["name"]] = p["default_model"]
             logger.info(f"LLM 客户端已初始化: {p['name']} ({p['default_model']})")
@@ -61,11 +64,11 @@ class LLMClient:
         temperature: float = 0.7,
         max_tokens: int = 4096,
     ) -> str:
-        """发送消息并返回文本响应"""
+        """发送消息并返回文本响应（使用流式以防止 relay 超时断连）"""
         client = self._get_client(provider)
         use_model = model or self._models.get(provider, "deepseek-chat")
 
-        response = await client.chat.completions.create(
+        stream = await client.chat.completions.create(
             model=use_model,
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -73,9 +76,16 @@ class LLMClient:
             ],
             temperature=temperature,
             max_tokens=max_tokens,
+            stream=True,
         )
 
-        return response.choices[0].message.content.strip()
+        chunks: list[str] = []
+        async for chunk in stream:
+            delta = chunk.choices[0].delta if chunk.choices else None
+            if delta and delta.content:
+                chunks.append(delta.content)
+
+        return "".join(chunks).strip()
 
     async def chat_json(
         self,

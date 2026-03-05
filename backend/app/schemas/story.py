@@ -22,6 +22,17 @@ class ProjectCreateRequest(BaseModel):
     video_provider: str | None = Field(None, max_length=50, description="视频生成提供商")
 
 
+class ProjectUpdateRequest(BaseModel):
+    """更新项目配置请求"""
+    title: str | None = Field(None, min_length=1, max_length=200, description="项目标题")
+    genre: str | None = Field(None, max_length=50, description="类型")
+    style: str | None = Field(None, max_length=50, description="视觉风格")
+    llm_provider: str | None = Field(None, max_length=50, description="LLM提供商")
+    image_provider: str | None = Field(None, max_length=50, description="图片生成提供商")
+    image_model: str | None = Field(None, max_length=100, description="图片生成模型")
+    video_provider: str | None = Field(None, max_length=50, description="视频生成提供商")
+
+
 class CharacterUpdateRequest(BaseModel):
     """编辑角色请求"""
     name: str | None = Field(None, max_length=100)
@@ -201,10 +212,33 @@ class ProjectDetailResponse(BaseModel):
 
 
 class ParseStatusResponse(BaseModel):
-    """解析状态响应"""
+    """解析状态响应（旧版兼容）"""
     status: str
     progress: float | None = None
     message: str | None = None
+
+
+class ParseTaskResponse(BaseModel):
+    """解析任务提交响应 — POST 返回"""
+    task_id: int
+    project_id: int
+    status: str
+    message: str | None = None
+
+
+class ParseTaskStatusResponse(BaseModel):
+    """解析任务状态响应 — 轮询返回"""
+    task_id: int
+    project_id: int
+    status: str
+    progress: float = 0.0
+    message: str | None = None
+    error_detail: str | None = None
+    result_metadata: dict | None = None
+    created_at: datetime | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class EmotionPresetResponse(BaseModel):

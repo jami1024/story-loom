@@ -18,6 +18,7 @@ class ProviderCreateRequest(BaseModel):
     default_model: str = Field(..., min_length=1, max_length=100, description="默认模型")
     is_active: bool = Field(True, description="是否启用")
     sort_order: int = Field(0, description="排序权重")
+    relay_type: str | None = Field(None, max_length=50, description="中转站类型: aiberm, one-api, new-api 等")
 
 
 class ProviderUpdateRequest(BaseModel):
@@ -30,6 +31,7 @@ class ProviderUpdateRequest(BaseModel):
     default_model: str | None = Field(None, min_length=1, max_length=100)
     is_active: bool | None = None
     sort_order: int | None = None
+    relay_type: str | None = Field(None, max_length=50)
 
 
 # ========== 响应模型 ==========
@@ -47,6 +49,7 @@ class ProviderResponse(BaseModel):
     default_model: str
     is_active: bool
     sort_order: int
+    relay_type: str | None
     created_at: datetime
     updated_at: datetime
 
@@ -63,6 +66,7 @@ class ProviderResponse(BaseModel):
             default_model=provider.default_model,
             is_active=provider.is_active,
             sort_order=provider.sort_order,
+            relay_type=provider.relay_type,
             created_at=provider.created_at,
             updated_at=provider.updated_at,
         )

@@ -1,5 +1,5 @@
 """
-Prompt 生成服务 - 使用 DeepSeek API 优化视频描述
+Prompt 生成服务 - 使用可切换模型优化视频描述
 """
 import os
 import logging
@@ -16,11 +16,11 @@ class PromptService:
 
     def __init__(self, api_key: str | None = None, base_url: str | None = None):
         """
-        初始化 DeepSeek 客户端
+        初始化 Prompt 模型客户端
 
         Args:
-            api_key: DeepSeek API Key (默认从 settings 读取)
-            base_url: DeepSeek API 基础 URL (默认从 settings 读取)
+            api_key: 模型 API Key (默认从 settings 读取)
+            base_url: 模型 API 基础 URL (默认从 settings 读取)
         """
         settings = get_settings()
         self.api_key = api_key or settings.DEEPSEEK_API_KEY
@@ -138,7 +138,7 @@ class PromptService:
         max_tokens: int = 500
     ) -> dict:
         """
-        使用 DeepSeek 生成视频描述 Prompt
+        使用模型服务生成视频描述 Prompt
 
         Args:
             user_input: 用户输入的想法或概念
@@ -189,7 +189,7 @@ class PromptService:
 
         except Exception as e:
             logger.error(f"❌ Prompt 生成失败: {str(e)}")
-            raise Exception(f"DeepSeek API 调用失败: {str(e)}")
+            raise Exception(f"Prompt 模型 API 调用失败: {str(e)}")
 
     async def close(self):
         """关闭客户端连接"""

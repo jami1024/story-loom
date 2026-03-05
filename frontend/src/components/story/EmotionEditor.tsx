@@ -43,102 +43,101 @@ export default function EmotionEditor({ emotion, presets, onSaved }: EmotionEdit
   const transitions = presets?.transitions || []
 
   return (
-    <div className="border border-gray-100 rounded-lg p-3 bg-gray-50">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-gray-700">{emotion.character_name}</span>
+    <div className="emo-card">
+      <div className="emo-header">
+        <span className="emo-char-name">{emotion.character_name}</span>
         {dirty && (
           <button
             onClick={handleSave}
             disabled={saving}
-            className="text-xs px-2 py-1 bg-gray-900 text-white rounded hover:bg-gray-800 disabled:opacity-50"
+            className="emo-save-btn"
           >
             {saving ? '...' : '保存'}
           </button>
         )}
       </div>
 
-      <div className="space-y-2">
+      <div className="emo-body">
         {/* 情绪标签 + 强度 */}
-        <div className="flex gap-3 items-center">
-          <div className="flex-1">
-            <label className="text-xs text-gray-500">情绪</label>
+        <div className="emo-tag-row">
+          <div className="emo-tag-field">
+            <label className="emo-label">情绪</label>
             <select
               value={data.emotion_tag}
               onChange={e => update('emotion_tag', e.target.value)}
-              className="w-full px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-gray-400"
+              className="char-edit-select"
             >
               {tags.map(t => (
                 <option key={t.id} value={t.id}>{t.zh} ({t.en})</option>
               ))}
             </select>
           </div>
-          <div className="w-32">
-            <label className="text-xs text-gray-500">强度 {data.emotion_intensity}/5</label>
+          <div className="emo-intensity-field">
+            <label className="emo-label">强度 {data.emotion_intensity}/5</label>
             <input
               type="range"
               min={1}
               max={5}
               value={data.emotion_intensity}
               onChange={e => update('emotion_intensity', parseInt(e.target.value))}
-              className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-900"
+              className="emo-range"
             />
           </div>
         </div>
 
         {/* 表情描述 */}
-        <div className="grid grid-cols-3 gap-2">
-          <div>
-            <label className="text-xs text-gray-500">起始表情</label>
+        <div className="emo-expression-row">
+          <div className="emo-field">
+            <label className="emo-label">起始表情</label>
             <input
               value={data.expression_start}
               onChange={e => update('expression_start', e.target.value)}
               placeholder="起始..."
-              className="w-full px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-gray-400"
+              className="char-edit-input"
             />
           </div>
-          <div>
-            <label className="text-xs text-gray-500">高潮表情</label>
+          <div className="emo-field">
+            <label className="emo-label">高潮表情</label>
             <input
               value={data.expression_peak}
               onChange={e => update('expression_peak', e.target.value)}
               placeholder="高潮..."
-              className="w-full px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-gray-400"
+              className="char-edit-input"
             />
           </div>
-          <div>
-            <label className="text-xs text-gray-500">结束表情</label>
+          <div className="emo-field">
+            <label className="emo-label">结束表情</label>
             <input
               value={data.expression_end}
               onChange={e => update('expression_end', e.target.value)}
               placeholder="结束..."
-              className="w-full px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-gray-400"
+              className="char-edit-input"
             />
           </div>
         </div>
 
         {/* 肢体语言 */}
-        <div>
-          <label className="text-xs text-gray-500">肢体语言</label>
+        <div className="emo-field">
+          <label className="emo-label">肢体语言</label>
           <input
             value={data.body_language}
             onChange={e => update('body_language', e.target.value)}
             placeholder="如：双手握拳，身体前倾"
-            className="w-full px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-gray-400"
+            className="char-edit-input"
           />
         </div>
 
         {/* 变化方向 */}
-        <div className="flex gap-3 items-center">
-          <span className="text-xs text-gray-500">变化:</span>
+        <div className="emo-transition-row">
+          <span className="emo-transition-label">变化:</span>
           {transitions.map(t => (
-            <label key={t.id} className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer">
+            <label key={t.id} className="emo-radio-label">
               <input
                 type="radio"
                 name={`transition-${emotion.shot_id}-${emotion.character_id}`}
                 value={t.id}
                 checked={data.emotion_transition === t.id}
                 onChange={() => update('emotion_transition', t.id)}
-                className="w-3 h-3 accent-gray-900"
               />
               {t.zh}
             </label>

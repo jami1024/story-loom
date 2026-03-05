@@ -1,4 +1,4 @@
-FROM docker.1ms.run/library/python:3.11-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -15,4 +15,4 @@ COPY backend/ .
 EXPOSE 8000
 
 # 启动命令（使用 uvicorn 运行 FastAPI）
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--timeout-keep-alive", "300"]

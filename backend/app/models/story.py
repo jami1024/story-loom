@@ -6,6 +6,7 @@ import enum
 from sqlalchemy import (
     Column,
     Enum as SQLEnum,
+    Float,
     ForeignKey,
     Integer,
     String,
@@ -27,6 +28,14 @@ class ProjectStatus(str, enum.Enum):
     PARSED = "parsed"
     READY = "ready"
     GENERATING = "generating"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class ParseTaskStatus(str, enum.Enum):
+    """解析任务状态"""
+    PENDING = "pending"
+    PROCESSING = "processing"
     COMPLETED = "completed"
     FAILED = "failed"
 
@@ -277,4 +286,38 @@ class ShotCharacterEmotion(Base):
             "expression_end": self.expression_end,
             "body_language": self.body_language,
             "emotion_transition": self.emotion_transition,
+        }
+
+
+class StoryParseTask(Base):
+    """故事解析任务"""
+    __tablename__ = "story_parse_tasks"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    project_id = Column(Integer, ForeignKey("story_projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    status = Column(String(20), default=ParseTaskStatus.PENDING.value, nullable=False, index=True, comment="状态")
+    progress = Column(Float, default=0.0, nullable=False, comment="进度 0.0~1.0")
+    message = Column(String(500), nullable=True, comment="当前阶段消息")
+    error_detail = Column(Text, nullable=True, comment="失败时的详细错误信息")
+    result_metadata = Column(JSON, nullable=True, comment="完成后的统计元数据")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    project = relationship("StoryProject")
+
+    def to_dict(self):
+        return {
+            "task_id": self.id,
+            "project_id": self.project_id,
+            "status": self.status,
+            "progress": self.progress,
+            "message": self.message,
+            "error_detail": self.error_detail,
+            "result_metadata": self.result_metadata,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "started_at": self.started_at.isoformat() if self.started_at else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

@@ -21,15 +21,24 @@ def build_character_image_prompt(
     parts = []
 
     # 主体描述：年龄 + 性别
-    subject = ""
-    if age:
-        subject += f"{age}的"
-    if gender:
-        gender_map = {"male": "男性", "female": "女性"}
-        subject += gender_map.get(gender, gender)
+    gender_map = {"male": "男性", "female": "女性", "animal": "动物"}
+    gender_text = gender_map.get(gender or "", gender or "")
+    is_animal = gender == "animal"
+
+    if is_animal:
+        # 动物角色不加"一位"前缀
+        parts.append(name or "动物角色")
     else:
-        subject += "人物"
-    parts.append(f"一位{subject}")
+        subject = ""
+        if age:
+            subject += f"{age}的"
+        subject += gender_text or "人物"
+        # 通过角色名推断是否为中国/东亚角色，中文名默认加"中国人"特征
+        is_chinese = bool(name and all('\u4e00' <= c <= '\u9fff' for c in name.strip()))
+        if is_chinese:
+            parts.append(f"一位{subject}，中国人，东亚面孔")
+        else:
+            parts.append(f"一位{subject}")
 
     # 外貌描述
     if appearance_brief:
@@ -39,9 +48,8 @@ def build_character_image_prompt(
     if clothing:
         parts.append(clothing)
 
-    # 性格转化为表情暗示
-    if personality:
-        # 取性格的简要部分作为表情提示
+    # 性格转化为表情暗示（非动物角色）
+    if personality and not is_animal:
         personality_short = personality[:20] if len(personality) > 20 else personality
         parts.append(f"气质{personality_short}")
 
@@ -58,8 +66,11 @@ def build_character_image_prompt(
     style_text = style_map.get(project_style or "cinematic", project_style or "电影感风格")
     parts.append(style_text)
 
-    # 固定后缀：肖像构图 + 干净背景
-    parts.append("半身肖像")
+    # 固定后缀：构图 + 干净背景
+    if is_animal:
+        parts.append("全身像")
+    else:
+        parts.append("半身肖像")
     parts.append("纯色背景")
     parts.append("高品质")
     parts.append("细节丰富")
